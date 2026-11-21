@@ -255,4 +255,46 @@ Lemma Z_op_le_none_r: forall x,
   Z_op_le x None.
 Proof. destruct x; reflexivity. Qed.
 
+(* 定义严格小于 *)
+Definition Z_op_lt (x y : option Z) : Prop :=
+  Z_op_le x y /\ x <> y.
+
+(* 定义大于 *)
+Definition Z_op_gt (x y : option Z) : Prop :=
+  Z_op_lt y x.
+
+Require Import Coq.Logic.Classical_Prop.
+
+(* 三分性定理 *)
+Theorem Z_op_trichotomy: forall x y,
+  Z_op_lt x y \/ x = y \/ Z_op_gt x y.
+Proof.
+  intros x y.
+  destruct (Z_op_le_total x y) as [Hle | Hge].
+  - destruct (Z_op_le_total y x) as [Hge' | Hle'].
+    + right. left. apply Z_op_le_antisym; assumption.
+    + unfold Z_op_lt. tauto.
+  - destruct (Z_op_le_total y x) as [Hge' | Hle'].
+    + right. unfold Z_op_gt. unfold Z_op_lt.
+      destruct (classic (x = y)).
+      * left. tauto.
+      * right. try auto.
+    + right. left. apply Z_op_le_antisym; assumption.
+Qed.
+
+Lemma lt_le_contradiction: 
+  forall x y, Z_op_lt x y -> Z_op_le y x -> False.
+Proof.
+  intros.
+  unfold Z_op_lt in H.
+  destruct H.
+  pose proof Z_op_le_antisym _ _ H H0.
+  contradiction.
+Qed.
+
+Lemma Z_op_gt_proper: 
+  forall x y z, Z_op_gt x y ->
+    Z_op_gt (Z_op_plus x z) (Z_op_plus y z).
+Proof. Admitted. (* EASY *)
+
 End Z_op.
